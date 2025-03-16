@@ -547,6 +547,17 @@
                 width: 90vw; /* 90% of window width */
                 max-width: none; /* Remove max-width constraint */
             }
+            #theme-toggle-btn {
+                -webkit-tap-highlight-color: transparent; /* Removes tap highlight on mobile */
+                outline: none; /* Reinforce no outline */
+            }
+            
+            #theme-toggle-btn:focus,
+            #theme-toggle-btn:active {
+                outline: none; /* No outline on focus or tap */
+                background-color: transparent; /* No background change */
+                box-shadow: none; /* No shadow */
+            }
         }
     </style>
 </head>
