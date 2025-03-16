@@ -65,7 +65,7 @@ def chat():
         response = client.text_generation(
             prompt=prompt,
             model="mistralai/Mixtral-8x7B-Instruct-v0.1",
-            max_new_tokens=100,
+            max_new_tokens=200,
             temperature=0.7,
             top_k=40,
             top_p=0.9,
@@ -131,7 +131,7 @@ def regenerate_after():
         response = client.text_generation(
             prompt=prompt,
             model="mistralai/Mixtral-8x7B-Instruct-v0.1",
-            max_new_tokens=100,  # Adjusted to match /chat for consistency
+            max_new_tokens=200,  # Adjusted to match /chat for consistency
             temperature=0.7,
             top_k=40,
             top_p=0.9,
