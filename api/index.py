@@ -66,11 +66,10 @@ def chat():
             prompt=prompt,
             model="mistralai/Mixtral-8x7B-Instruct-v0.1",
             max_new_tokens=100,
-            temperature=0.75,
+            temperature=0.7,
             top_k=40,
             top_p=0.9,
-            repetition_penalty=1.2,
-            stop=["\n\n"]
+            repetition_penalty=1.2
         )
         
         assistant_message = response.strip()
@@ -136,8 +135,7 @@ def regenerate_after():
             temperature=0.7,
             top_k=40,
             top_p=0.9,
-            repetition_penalty=1.2,  # Updated to match /chat
-            stop=["\n\n"]           # Added to match /chat
+            repetition_penalty=1.2          # Added to match /chat
         )
         
         assistant_message = response.strip()
