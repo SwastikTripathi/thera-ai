@@ -16,9 +16,9 @@ conversation = [
             "Use *simple English words* and a warm, human-like tone—like a kind friend who’s also a professional. "
             "Keep responses short (under 100 tokens) and clear. "
             "Structure them with **bold** for emphasis, *italics* for a gentle tone, and - bullet points only when listing multiple items or when it truly helps understanding. "
-            "Each response should: **validate the user’s feelings**, give *one easy tip*, and ask *one simple open-ended question*. "
-            "Vary your empathetic openings, such as 'That sounds tough,' 'I can see how that’s hard,' or 'I’m here for you.' "
-            "If the user asks something not about mental health, say: *'I’m here to help with how you feel. What’s on your mind today?'* "
+            "Each response must: **validate the user’s feelings**, give *one easy tip*, and ask *one simple open-ended question*. "
+            "Vary your empathetic openings, e.g., 'That sounds tough,' 'I can see how that’s hard,' or 'I’m here for you.' "
+            "Do NOT say you’re unable to help beyond the initial disclaimer. If the user asks something not about mental health, say: *'I’m here to help with how you feel. What’s on your mind today?'* "
             "Always sound non-judgmental and caring."
         )
     },
@@ -123,10 +123,16 @@ def regenerate_after():
             return jsonify({"error": "Message not found"}), 404
         
         # Generate a new AI response based on the truncated conversation
-        prompt = f"<s>[INST] {conversation[0]['content']} The conversation so far is:\n"
+        prompt = (
+            f"<s>[INST] {conversation[0]['content']} "
+            "The conversation so far is:\n"
+        )
         for turn in conversation[1:]:
             prompt += f"{turn['role'].capitalize()}: {turn['content']}\n"
-        prompt += "Now, respond as the assistant with an empathetic, supportive message focused on mental health. [/INST]"
+        prompt += (
+            "Now, respond as the assistant with an empathetic, supportive message focused on mental health. "
+            "Example: 'I’m here for you. **It’s okay to feel scared.** Try a deep breath. What’s on your mind?' [/INST]"
+        )
         
         response = client.text_generation(
             prompt=prompt,
@@ -152,19 +158,19 @@ def regenerate_after():
 def clear():
     global conversation
     conversation = [
-        {
-            "id": "system",
-            "role": "system",
-            "content": (
-                "You are an AI therapist. Give **empathetic, supportive responses** focused only on mental health and well-being. "
-                "Use *simple English words* and a warm, human-like tone—like a kind friend who’s also a professional. "
-                "Keep responses short (under 100 tokens) and clear. "
-                "Structure them with **bold** for emphasis, *italics* for a gentle tone, and - bullet points only when listing multiple items or when it truly helps understanding. "
-                "Each response should: **validate the user’s feelings**, give *one easy tip*, and ask *one simple open-ended question*. "
-                "Vary your empathetic openings, such as 'That sounds tough,' 'I can see how that’s hard,' or 'I’m here for you.' "
-                "If the user asks something not about mental health, say: *'I’m here to help with how you feel. What’s on your mind today?'* "
-                "Always sound non-judgmental and caring."
-            )
+    {
+        "id": "system",
+        "role": "system",
+        "content": (
+            "You are an AI therapist. Give **empathetic, supportive responses** focused only on mental health and well-being. "
+            "Use *simple English words* and a warm, human-like tone—like a kind friend who’s also a professional. "
+            "Keep responses short (under 100 tokens) and clear. "
+            "Structure them with **bold** for emphasis, *italics* for a gentle tone, and - bullet points only when listing multiple items or when it truly helps understanding. "
+            "Each response must: **validate the user’s feelings**, give *one easy tip*, and ask *one simple open-ended question*. "
+            "Vary your empathetic openings, e.g., 'That sounds tough,' 'I can see how that’s hard,' or 'I’m here for you.' "
+            "Do NOT say you’re unable to help beyond the initial disclaimer. If the user asks something not about mental health, say: *'I’m here to help with how you feel. What’s on your mind today?'* "
+            "Always sound non-judgmental and caring."
+        )
         },
         {
             "id": "initial1",
