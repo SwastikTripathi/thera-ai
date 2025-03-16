@@ -389,11 +389,12 @@
             background: var(--bg-color);
             position: fixed;
             bottom: 0;
+            width: 90vw; /* Match .chat-window */
+            max-width: 800px; /* Match .chat-window */
             left: 50%;
             transform: translateX(-50%);
-            width: 80vw; /* Reduced from 90vw to 80% of original */
-            max-width: 640px; /* Reduced from 800px to 80% of original */
             z-index: 11;
+            box-sizing: border-box; /* Ensure padding doesn’t increase width */
         }
         #user-input {
             flex-grow: 1;
@@ -551,7 +552,7 @@
 </head>
 <body>
     <div class="navbar">
-        <a style="color: var(--text-color); text-decoration: none;" href="/">
+        <a style="color: var(--text-color); text-decoration: none;" href="#">
             <div class="brand">
                 <span class="logo"></span> Soothe
             </div>
@@ -635,7 +636,7 @@
         let currentTypeInterval = null;
         let currentFetchController = null;
         let currentRotation = 0;
-
+    
         const initialInput = document.getElementById('initial-input');
         const initialSendButton = document.getElementById('initial-send-button');
         const userInput = document.getElementById('user-input');
@@ -655,7 +656,7 @@
         const initialScreen = document.querySelector('.initial-screen');
         const initialGreeting = document.getElementById('initial-greeting');
         const conversationGreeting = document.getElementById('conversation-greeting');
-
+    
         function getTimeBasedGreeting() {
             const now = new Date();
             const hours = now.getHours();
@@ -669,35 +670,37 @@
                 return "Good Night, I'm SootheAI.";
             }
         }
-
+    
         function setGreetings() {
             const greeting = getTimeBasedGreeting();
             initialGreeting.textContent = greeting;
-            conversationGreeting.textContent = greeting;
+            if (conversationGreeting) { // Prevent TypeError if not present
+                conversationGreeting.textContent = greeting;
+            }
         }
-
+    
         function getTimestamp() {
             const now = new Date();
             const hours = now.getHours().toString().padStart(2, '0');
             const minutes = now.getMinutes().toString().padStart(2, '0');
             return `${hours}:${minutes}`;
         }
-
+    
         document.querySelectorAll('.message .timestamp').forEach(ts => {
             ts.textContent = getTimestamp();
         });
-
+    
         function scrollToBottom() {
             conversationDiv.scrollTop = conversationDiv.scrollHeight;
         }
-
+    
         function updateNavbarBorderPosition() {
             const navbar = document.querySelector('.navbar');
             const navbarHeight = navbar.offsetHeight;
             const navbarBorder = document.querySelector('.navbar-border');
             navbarBorder.style.top = `${navbarHeight}px`;
         }
-
+    
         function stopGeneration() {
             if (currentTypeInterval) {
                 clearInterval(currentTypeInterval);
@@ -718,21 +721,22 @@
             sendButtonImg.src = '/static/img/arrow-dark.png';
             sendButtonImg.alt = 'Send';
             scrollToBottom();
+            userInput.focus(); // Focus bottom input after stopping generation
         }
-
+    
         async function sendMessage(messageSource = 'user') {
             stopGeneration();
-        
+    
             const message = messageSource === 'initial' ? initialInput.value.trim() : userInput.value.trim();
             if (!message) return;
-        
+    
             if (currentRotation === 0) {
                 currentRotation = -90;
             } else {
                 currentRotation -= 360;
             }
             sendButton.style.transform = `rotate(${currentRotation}deg)`;
-        
+    
             const userId = Date.now().toString();
             const userMessageWrapper = document.createElement('div');
             userMessageWrapper.className = 'message-wrapper user';
@@ -756,15 +760,15 @@
             editBtn.appendChild(editImg);
             userMessageWrapper.appendChild(editBtn);
             conversationDiv.appendChild(userMessageWrapper);
-        
+    
             initialScreen.style.display = 'none';
             conversationDiv.style.display = 'block';
             inputArea.style.display = 'flex';
             if (messageSource === 'initial') initialInput.value = '';
             else userInput.value = '';
             userInput.style.height = 'auto';
-            scrollToBottom();
-        
+            scrollToBottom(); // Autoscroll after sending message
+    
             const typingIndicatorWrapper = document.createElement('div');
             typingIndicatorWrapper.className = 'message-wrapper ai';
             const typingIndicator = document.createElement('div');
@@ -772,16 +776,16 @@
             typingIndicator.textContent = 'Soothe is typing...';
             typingIndicatorWrapper.appendChild(typingIndicator);
             conversationDiv.appendChild(typingIndicatorWrapper);
-            scrollToBottom();
+            scrollToBottom(); // Autoscroll when AI starts typing
             sendButtonImg.src = '/static/img/stop-dark.png';
             sendButtonImg.alt = 'Stop';
-        
+    
             let dots = 0;
             const typingInterval = setInterval(() => {
                 dots = (dots + 1) % 4;
                 typingIndicator.textContent = 'Soothe is typing' + '.'.repeat(dots);
             }, 500);
-        
+    
             currentFetchController = new AbortController();
             let data;
             try {
@@ -797,11 +801,12 @@
                 conversationDiv.removeChild(typingIndicatorWrapper);
                 sendButtonImg.src = '/static/img/arrow-dark.png';
                 sendButtonImg.alt = 'Send';
+                userInput.focus(); // Focus bottom input on error
                 return;
             }
             clearInterval(typingInterval);
             conversationDiv.removeChild(typingIndicatorWrapper);
-        
+    
             const aiMessageWrapper = document.createElement('div');
             aiMessageWrapper.className = 'message-wrapper ai';
             aiMessageWrapper.dataset.id = data.id;
@@ -816,7 +821,7 @@
             aiMessage.appendChild(textSpan);
             aiMessageWrapper.appendChild(aiMessage);
             conversationDiv.appendChild(aiMessageWrapper);
-        
+    
             const fullResponse = data.response || "I'm here to help. Let’s talk more.";
             let i = 0;
             const isAtBottom = Math.abs(conversationDiv.scrollHeight - conversationDiv.scrollTop - conversationDiv.clientHeight) < 1;
@@ -826,42 +831,43 @@
                 conversationDiv.removeEventListener('scroll', scrollListener);
             };
             conversationDiv.addEventListener('scroll', scrollListener);
-        
+    
             currentTypeInterval = setInterval(() => {
                 if (i < fullResponse.length) {
                     textSpan.textContent = fullResponse.slice(0, i + 1);
                     textSpan.appendChild(cursorSpan);
                     i++;
-                    if (autoScroll) scrollToBottom();
+                    if (autoScroll) scrollToBottom(); // Autoscroll while AI types
                 } else {
                     clearInterval(currentTypeInterval);
                     currentTypeInterval = null;
                     aiMessage.innerHTML = `<div class="text">${marked.parse(fullResponse)}</div><span class="timestamp">${getTimestamp()}</span>`;
                     sendButtonImg.src = '/static/img/arrow-dark.png';
                     sendButtonImg.alt = 'Send';
-                    if (autoScroll) scrollToBottom();
+                    if (autoScroll) scrollToBottom(); // Final scroll when AI finishes
+                    userInput.focus(); // Focus bottom input after AI finishes
                     document.getElementById('notification-sound').play();
                 }
             }, 15);
         }
-
+    
         sendButton.addEventListener('click', () => sendMessage('user'));
         initialSendButton.addEventListener('click', () => sendMessage('initial'));
-
+    
         userInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 sendMessage('user');
             }
         });
-
+    
         initialInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 sendMessage('initial');
             }
         });
-
+    
         userInput.addEventListener('input', () => {
             userInput.style.height = 'auto';
             userInput.style.height = userInput.scrollHeight + 'px';
@@ -871,7 +877,7 @@
                 userInput.style.overflowY = 'hidden';
             }
         });
-
+    
         initialInput.addEventListener('input', () => {
             initialInput.style.height = '60px'; // Maintain fixed height
             if (initialInput.scrollHeight > 60) {
@@ -880,14 +886,14 @@
                 initialInput.style.overflowY = 'hidden';
             }
         });
-
+    
         document.querySelectorAll('.prompt-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 initialInput.value = btn.textContent;
                 sendMessage('initial');
             });
         });
-
+    
         conversationDiv.addEventListener('click', (e) => {
             if (e.target.closest('.edit-btn')) {
                 const wrapper = e.target.closest('.message-wrapper');
@@ -901,7 +907,7 @@
                 textDiv.innerHTML = '';
                 textDiv.appendChild(input);
                 input.focus();
-
+    
                 input.addEventListener('input', () => {
                     input.style.height = 'auto';
                     input.style.height = input.scrollHeight + 'px';
@@ -911,7 +917,7 @@
                         input.style.overflowY = 'hidden';
                     }
                 });
-
+    
                 input.addEventListener('keydown', (e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
@@ -920,14 +926,14 @@
                             textDiv.textContent = newText;
                             messageDiv.appendChild(timestampSpan);
                             stopGeneration();
-
+    
                             let nextWrapper = wrapper.nextElementSibling;
                             while (nextWrapper) {
                                 const toRemove = nextWrapper;
                                 nextWrapper = nextWrapper.nextElementSibling;
                                 conversationDiv.removeChild(toRemove);
                             }
-
+    
                             const typingIndicatorWrapper = document.createElement('div');
                             typingIndicatorWrapper.className = 'message-wrapper ai';
                             const typingIndicator = document.createElement('div');
@@ -935,18 +941,18 @@
                             typingIndicator.textContent = 'Soothe is typing...';
                             typingIndicatorWrapper.appendChild(typingIndicator);
                             conversationDiv.appendChild(typingIndicatorWrapper);
-                            scrollToBottom();
+                            scrollToBottom(); // Autoscroll after edit
                             sendButtonImg.src = '/static/img/stop-dark.png';
                             sendButtonImg.alt = 'Stop';
-
+    
                             let dots = 0;
                             const typingInterval = setInterval(() => {
                                 dots = (dots + 1) % 4;
                                 typingIndicator.textContent = 'Soothe is typing' + '.'.repeat(dots);
                             }, 500);
-
+    
                             currentFetchController = new AbortController();
-
+    
                             fetch('/api/update_message', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
@@ -960,7 +966,7 @@
                                 }).then(response => response.json()).then(data => {
                                     clearInterval(typingInterval);
                                     conversationDiv.removeChild(typingIndicatorWrapper);
-
+    
                                     const aiMessageWrapper = document.createElement('div');
                                     aiMessageWrapper.className = 'message-wrapper ai';
                                     aiMessageWrapper.dataset.id = data.id;
@@ -975,7 +981,7 @@
                                     aiMessage.appendChild(textSpan);
                                     aiMessageWrapper.appendChild(aiMessage);
                                     conversationDiv.appendChild(aiMessageWrapper);
-
+    
                                     const fullResponse = data.response || "Thanks for sharing. How can I assist you now?";
                                     let i = 0;
                                     const isAtBottom = Math.abs(conversationDiv.scrollHeight - conversationDiv.scrollTop - conversationDiv.clientHeight) < 1;
@@ -985,20 +991,21 @@
                                         conversationDiv.removeEventListener('scroll', scrollListener);
                                     };
                                     conversationDiv.addEventListener('scroll', scrollListener);
-
+    
                                     currentTypeInterval = setInterval(() => {
                                         if (i < fullResponse.length) {
                                             textSpan.textContent = fullResponse.slice(0, i + 1);
                                             textSpan.appendChild(cursorSpan);
                                             i++;
-                                            if (autoScroll) scrollToBottom();
+                                            if (autoScroll) scrollToBottom(); // Autoscroll while AI types
                                         } else {
                                             clearInterval(currentTypeInterval);
                                             currentTypeInterval = null;
                                             aiMessage.innerHTML = `<div class="text">${marked.parse(fullResponse)}</div><span class="timestamp">${getTimestamp()}</span>`;
                                             sendButtonImg.src = '/static/img/arrow-dark.png';
                                             sendButtonImg.alt = 'Send';
-                                            if (autoScroll) scrollToBottom();
+                                            if (autoScroll) scrollToBottom(); // Final scroll when AI finishes
+                                            userInput.focus(); // Focus bottom input after edit
                                             document.getElementById('notification-sound').play();
                                         }
                                     }, 15);
@@ -1007,6 +1014,7 @@
                                     conversationDiv.removeChild(typingIndicatorWrapper);
                                     sendButtonImg.src = '/static/img/arrow-dark.png';
                                     sendButtonImg.alt = 'Send';
+                                    userInput.focus(); // Focus bottom input on error
                                 });
                             });
                         } else {
@@ -1018,7 +1026,7 @@
                         messageDiv.appendChild(timestampSpan);
                     }
                 });
-
+    
                 input.addEventListener('blur', () => {
                     if (textDiv.contains(input)) {
                         textDiv.textContent = currentText;
@@ -1027,19 +1035,19 @@
                 });
             }
         });
-
+    
         document.addEventListener('keydown', (e) => {
             if (e.ctrlKey && e.shiftKey && e.key === 'C') {
                 modal.style.display = 'flex';
                 modal.focus();
             }
         });
-
+    
         clearBtn.addEventListener('click', () => {
             modal.style.display = 'flex';
             modal.focus();
         });
-
+    
         function clearConversation() {
             stopGeneration();
             fetch('/api/clear', { method: 'POST' });
@@ -1073,9 +1081,10 @@
             sendButtonImg.alt = 'Send';
             scrollToBottom();
             modal.style.display = 'none';
-            setGreetings(); // Update greetings after clearing
+            setGreetings();
+            initialInput.focus(); // Focus initial input after clearing
         }
-
+    
         modalClearBtn.addEventListener('click', clearConversation);
         modal.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') clearConversation();
@@ -1083,7 +1092,7 @@
         modal.addEventListener('click', (e) => {
             if (e.target === modal) modal.style.display = 'none';
         });
-
+    
         themeToggle.addEventListener('click', () => {
             themeToggle.classList.toggle('theme-toggle--toggled');
             if (themeToggle.classList.contains('theme-toggle--toggled')) {
@@ -1101,7 +1110,7 @@
             }
             updateNavbarBorderPosition();
         });
-
+    
         const currentTheme = localStorage.getItem('theme') || 'dark';
         document.documentElement.setAttribute('data-theme', currentTheme);
         if (currentTheme === 'dark') {
@@ -1112,7 +1121,7 @@
             clearBtnImg.src = '/static/img/new-dark.png';
             helpBtnImg.src = '/static/img/help-dark.png';
         }
-
+    
         helpBtn.addEventListener('click', () => {
             helpModal.style.display = 'flex';
         });
@@ -1122,13 +1131,20 @@
         helpModal.addEventListener('click', (e) => {
             if (e.target === helpModal) helpModal.style.display = 'none';
         });
-
+    
         updateNavbarBorderPosition();
         window.addEventListener('resize', updateNavbarBorderPosition);
-
+    
         scrollToBottom();
-        setGreetings(); // Set initial greetings on page load
-        document.getElementById('initial-input').focus();
+        setGreetings();
+    
+        // Focus initial input on page load with a slight delay to ensure DOM readiness
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                initialInput.focus();
+                console.log('Initial input focused on page load');
+            }, 100);
+        });
     </script>
 </body>
 </html>
