@@ -49,8 +49,10 @@ def chat():
         if not user_id:
             return jsonify({"error": "No message ID provided"}), 400
         
-        conversation.append({"id": user_id, "role": "user", "content": user_message})
+        print(f"Received message: {user_message}, ID: {user_id}")
+        print(f"API Key loaded: {HF_API_KEY is not None}")
         
+        conversation.append({"id": user_id, "role": "user", "content": user_message})
         if len(conversation) > 11:
             conversation.pop(1)
         
@@ -59,11 +61,12 @@ def chat():
             prompt += f"{turn['role'].capitalize()}: {turn['content']}\n"
         prompt += "Now, respond as the assistant with an empathetic, supportive message focused on mental health. [/INST]"
         
+        print(f"Sending prompt to Hugging Face: {prompt}")
         response = client.text_generation(
             prompt=prompt,
             model="mistralai/Mixtral-8x7B-Instruct-v0.1",
             max_new_tokens=100,
-            temperature=0.75,  # Changed from 0.7 to 0.75
+            temperature=0.75,
             top_k=40,
             top_p=0.9,
             repetition_penalty=1.2,
@@ -77,8 +80,9 @@ def chat():
         return jsonify({"response": assistant_message, "id": assistant_id})
     
     except Exception as e:
-        print(f"Error: {str(e)}")
-        return jsonify({"error": "Something went wrong on the server"}), 500
+        error_msg = f"Error in chat: {str(e)}"
+        print(error_msg)
+        return jsonify({"error": error_msg}), 500
 
 @app.route('/api/update_message', methods=['POST'])
 def update_message():
