@@ -9,7 +9,7 @@
         /* Theme Variables */
         :root {
             --bg-color: #F5F9FA;
-            --text-color: #333333;
+            --text-color: #333333;f
             --message-bg-ai: #E6F0FA;
             --message-text-ai: #1c2526;
             --message-bg-user: #D1E8E2;
@@ -566,19 +566,24 @@
             right: 0; /* Extreme right when closed */
             width: 40px;
             height: 40px;
-            background: var(--button-bg);
+            background: var(--button-bg); /* Kept as variable for theme consistency */
             border: none;
             border-radius: 50% 0 0 50%; /* Waterdrop shape, flat on right */
             cursor: pointer;
             z-index: 12;
             transition: right 0.3s ease, transform 0.3s ease, background 0.3s ease;
+            display: flex; /* Added to center the coffee image */
+            align-items: center;
+            justify-content: center;
         }
+
         #waterdrop-btn:hover {
-            background: #6AA56B;
+            background: #6AA56B; /* Kept your green hover color */
             transform: scale(1.1);
         }
+
         [data-theme="dark"] #waterdrop-btn:hover {
-            background: #6AA56B;
+            background: #6AA56B; /* Consistent hover color in dark mode */
         }
 
         /* Sliding Menu */
@@ -595,28 +600,32 @@
             z-index: 11;
             transition: right 0.3s ease;
             border-radius: 8px 0 0 8px;
-            padding: 15px; /* Increased from 10px to 15px for more padding */
+            padding: 15px; /* Kept your increased padding */
             max-width: 30vw; /* Maximum width of 30% of viewport width */
         }
+
         .sliding-menu.open {
             right: 0; /* Slides fully into view */
         }
+
         .sliding-menu p {
             margin: 10px 0;
-            font-size: 14px;
+            font-size: 12px; /* Reduced from 14px to 12px */
             color: var(--text-color);
             text-align: center;
             word-wrap: break-word; /* Allow text to wrap */
         }
+
         .sliding-menu a {
-            color: var(--accent-blue);
+            color: var(--button-bg); /* Changed to --button-bg (e.g., #FF9933) */
             text-decoration: none;
-            font-size: 14px;
+            font-size: 12px; /* Reduced from 14px to 12px */
             transition: color 0.3s ease;
             word-wrap: break-word; /* Allow link text to wrap */
         }
+
         .sliding-menu a:hover {
-            color: var(--button-bg);
+            color: #E68A00; /* Changed to #E68A00 from var(--button-bg) */
         }
     </style>
 </head>
@@ -703,12 +712,13 @@
     <audio id="notification-sound" src="static/notification.mp3" preload="auto"></audio>
     
     <!-- Waterdrop Button -->
-    <button id="waterdrop-btn" title="Open Menu"></button>
+    <button id="waterdrop-btn" title="Support Me">
+        <img src="/static/img/coffee-cup.png" alt="Coffee Cup" style="width: 24px; height: 24px; vertical-align: middle;">
+    </button>
 
     <!-- Sliding Menu -->
     <div id="sliding-menu" class="sliding-menu">
-        <p>{SLIDING_MENU_MESSAGE}</p>
-        <a href="{SLIDING_MENU_LINK_URL}" target="_blank">{SLIDING_MENU_LINK_TEXT}</a>
+        <p style="font-size: 12px;">some text</p>
     </div>
     
     <script>
