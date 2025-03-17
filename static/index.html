@@ -953,7 +953,7 @@
                     userInput.focus(); // Focus bottom input after AI finishes
                     document.getElementById('notification-sound').play();
                 }
-            }, 15);
+            }, 3);
         }
     
         sendButton.addEventListener('click', () => sendMessage('user'));
@@ -1113,7 +1113,7 @@
                                             userInput.focus(); // Focus bottom input after edit
                                             document.getElementById('notification-sound').play();
                                         }
-                                    }, 15);
+                                    }, 3);
                                 }).catch(error => {
                                     clearInterval(typingInterval);
                                     conversationDiv.removeChild(typingIndicatorWrapper);
