@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify, send_from_directory
-from huggingface_hub import InferenceClient
+import requests
+import json
 import os
 
 app = Flask(__name__)
@@ -7,10 +8,9 @@ app = Flask(__name__)
 # ------------------------------
 # AI Client Configuration
 # ------------------------------
-HF_API_KEY = os.environ.get("HF_API_KEY")
-if not HF_API_KEY:
-    raise ValueError("HF_API_KEY environment variable is not set")
-client = InferenceClient(token=HF_API_KEY)
+ARLIAI_API_KEY = os.environ.get("ARLIAI_API_KEY")
+if not ARLIAI_API_KEY:
+    raise ValueError("ARLIAI_API_KEY environment variable is not set")
 
 # ------------------------------
 # Data Models
@@ -57,18 +57,38 @@ def get_or_create_session(user_id):
     return sessions[user_id]
 
 def generate_ai_response(prompt, max_tokens=300, temperature=0.7):
-    """Generate an AI response based on the provided prompt."""
+    """
+    Generate an AI response using the ARLIAI API.
+    Note: Parameters are set on the ARLIAI dashboard; only prompt and model are passed here.
+    """
     try:
-        response = client.text_generation(
-            prompt=prompt,
-            model="mistralai/Mixtral-8x7B-Instruct-v0.1",
-            max_new_tokens=max_tokens,
-            temperature=temperature,
-            top_k=40,
-            top_p=0.9,
-            repetition_penalty=1.2
-        )
-        return response.strip()
+        url = "https://api.arliai.com/v1/chat/completions"
+        payload = json.dumps({
+            "model": "Mistral-Nemo-12B-Instruct-2407",
+            "messages": [
+                {
+                    "role": "system",
+                    "content": (
+                        "You are an AI therapist. Provide detailed, empathetic, and structured responses with clear headings: "
+                        "'Your Feelings', 'Next Steps', and 'Reflection'. Include supportive language, actionable suggestions, and reflective questions. "
+                        "Elaborate your answers to offer comprehensive guidance."
+                    )
+                },
+                {"role": "user", "content": prompt}
+            ],
+            "stream": False
+        })
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f"Bearer {ARLIAI_API_KEY}"
+        }
+        response = requests.post(url, headers=headers, data=payload)
+        response.raise_for_status()  # Raise an exception for HTTP errors
+        result = response.json()
+        return result["choices"][0]["message"]["content"].strip()
+    except requests.RequestException as e:
+        print(f"API Request Error: {str(e)}")
+        return "I'm having trouble connecting right now. Please try again."
     except Exception as e:
         print(f"AI Error: {str(e)}")
         return "I'm having trouble processing that right now. Please try again."
